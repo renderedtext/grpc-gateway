@@ -466,45 +466,62 @@ var registriesSeenMutex sync.Mutex
 // but may not always produce optimal names. This is a reasonably close
 // approximation of what they should look like in most cases.
 func resolveFullyQualifiedNameToSwaggerNames(messages []string) map[string]string {
-	packagesByDepth := make(map[int][][]string)
+
+	// packagesByDepth := make(map[int][][]string)
 	uniqueNames := make(map[string]string)
 
-	hierarchy := func(pkg string) []string {
-		return strings.Split(pkg, ".")
-	}
-
 	for _, p := range messages {
-		h := hierarchy(p)
-		for depth := range h {
-			if _, ok := packagesByDepth[depth]; !ok {
-				packagesByDepth[depth] = make([][]string, 0)
-			}
-			packagesByDepth[depth] = append(packagesByDepth[depth], h[len(h)-depth:])
-		}
+		swaggerName := strings.Replace(p, ".", " ", -1)
+		swaggerName = strings.Title(swaggerName)
+		swaggerName = strings.Replace(swaggerName, " ", "", -1)
+
+		uniqueNames[p] = swaggerName
 	}
 
-	count := func(list [][]string, item []string) int {
-		i := 0
-		for _, element := range list {
-			if reflect.DeepEqual(element, item) {
-				i++
-			}
-		}
-		return i
+	// hierarchy := func(pkg string) []string {
+	// 	return strings.Split(pkg, ".")
+	// }
+
+	// for _, p := range messages {
+	// 	h := hierarchy(p)
+	// 	for depth := range h {
+	// 		if _, ok := packagesByDepth[depth]; !ok {
+	// 			packagesByDepth[depth] = make([][]string, 0)
+	// 		}
+	// 		packagesByDepth[depth] = append(packagesByDepth[depth], h[len(h)-depth:])
+	// 	}
+	// }
+
+	// count := func(list [][]string, item []string) int {
+	// 	i := 0
+	// 	for _, element := range list {
+	// 		if reflect.DeepEqual(element, item) {
+	// 			i++
+	// 		}
+	// 	}
+	// 	return i
+	// }
+
+	// for _, p := range messages {
+	// 	h := hierarchy(p)
+
+	// 	fmt.Fprintf(os.Stderr, "%+v\n", h)
+
+	// 	for depth := 0; depth < len(h); depth++ {
+	// 		if count(packagesByDepth[depth], h[len(h)-depth:]) == 1 {
+	// 			uniqueNames[p] = strings.Join(h[len(h)-depth-1:], "")
+	// 			break
+	// 		}
+	// 		if depth == len(h)-1 {
+	// 			uniqueNames[p] = strings.Join(h, "")
+	// 		}
+	// 	}
+	// }
+
+	for a, b := range uniqueNames {
+		fmt.Fprintf(os.Stderr, "%+v -> %+v \n", a, b)
 	}
 
-	for _, p := range messages {
-		h := hierarchy(p)
-		for depth := 0; depth < len(h); depth++ {
-			if count(packagesByDepth[depth], h[len(h)-depth:]) == 1 {
-				uniqueNames[p] = strings.Join(h[len(h)-depth-1:], "")
-				break
-			}
-			if depth == len(h)-1 {
-				uniqueNames[p] = strings.Join(h, "")
-			}
-		}
-	}
 	return uniqueNames
 }
 
