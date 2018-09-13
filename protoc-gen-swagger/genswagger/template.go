@@ -590,9 +590,18 @@ func isResourceName(prefix string) bool {
 	return field == "parent" || field == "name"
 }
 
-func renderServices(services []*descriptor.Service, paths swaggerPathsObject, reg *descriptor.Registry, requestResponseRefs, customRefs refMap) error {
+func renderServices(pkgName string, services []*descriptor.Service, paths swaggerPathsObject, reg *descriptor.Registry, requestResponseRefs, customRefs refMap) error {
 	// Correctness of svcIdx and methIdx depends on 'services' containing the services in the same order as the 'file.Service' array.
 	for svcIdx, svc := range services {
+
+		fmt.Fprintf(os.Stderr, "%+v\n", svcIdx)
+		fmt.Fprintf(os.Stderr, "%+v\n", svc)
+		fmt.Fprintf(os.Stderr, "%+v\n", paths)
+		fmt.Fprintf(os.Stderr, "%+v\n", reg)
+		fmt.Fprintf(os.Stderr, "%+v\n", requestResponseRefs)
+		fmt.Fprintf(os.Stderr, "%+v\n", customRefs)
+		fmt.Fprintf(os.Stderr, "------------------------\n")
+
 		for methIdx, meth := range svc.Methods {
 			for bIdx, b := range meth.Bindings {
 				// Iterate over all the swagger parameters
@@ -733,8 +742,14 @@ func renderServices(services []*descriptor.Service, paths swaggerPathsObject, re
 				if meth.GetServerStreaming() {
 					desc += "(streaming responses)"
 				}
+
+				svcFqn := fmt.Sprintf("%s.%s", pkgName, svc.GetName())
+				operationTag := strings.Replace(svcFqn, ".", " ", -1)
+				operationTag = strings.Title(operationTag)
+				operationTag = strings.Replace(operationTag, " ", "", -1)
+
 				operationObject := &swaggerOperationObject{
-					Tags:       []string{svc.GetName()},
+					Tags:       []string{operationTag},
 					Parameters: parameters,
 					Responses: swaggerResponsesObject{
 						"200": swaggerResponseObject{
@@ -864,7 +879,8 @@ func applyTemplate(p param) (*swaggerObject, error) {
 	// and create entries for all of them.
 	// Also adds custom user specified references to second map.
 	requestResponseRefs, customRefs := refMap{}, refMap{}
-	if err := renderServices(p.Services, s.Paths, p.reg, requestResponseRefs, customRefs); err != nil {
+
+	if err := renderServices(*p.Package, p.Services, s.Paths, p.reg, requestResponseRefs, customRefs); err != nil {
 		panic(err)
 	}
 

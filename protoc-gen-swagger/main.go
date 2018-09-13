@@ -147,6 +147,7 @@ func parseReqParam(param string, f *flag.FlagSet, pkgMap map[string]string) erro
 			}
 			continue
 		}
+
 		name, value := spec[0], spec[1]
 		if strings.HasPrefix(name, "M") {
 			pkgMap[name[1:]] = value
